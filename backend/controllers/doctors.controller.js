@@ -1,39 +1,61 @@
-const Doctor = require('../models/Doctor');
+const pool = require('../config/database');
 
+/**
+ * GET /api/doctors
+ * Fetch all doctors with optional filters
+ */
 exports.getAllDoctors = async (req, res) => {
   try {
     const {
       specialty,
-      city,
-      minExperience,
-      maxFee,
       limit = 20,
       offset = 0
     } = req.query;
-    
-    const filters = {};
-    if (specialty) filters.specialty = specialty;
-    if (city) filters.city = city;
-    if (minExperience) filters.minExperience = parseInt(minExperience);
-    if (maxFee) filters.maxFee = parseFloat(maxFee);
-    filters.limit = parseInt(limit);
-    filters.offset = parseInt(offset);
-    
-    const doctors = await Doctor.findAll(filters);
-    const total = await Doctor.count(filters);
-    
+
+    let query = `
+      SELECT 
+        id,
+        name,
+        specialty,
+        experience,
+        rating,
+        mode
+      FROM doctors
+    `;
+
+    const values = [];
+    const conditions = [];
+
+    if (specialty) {
+      values.push(specialty);
+      conditions.push(`specialty = $${values.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    query += `
+      ORDER BY rating DESC
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+    `;
+
+    values.push(Number(limit), Number(offset));
+
+    const result = await pool.query(query, values);
+
     res.json({
       success: true,
-      data: doctors,
+      data: result.rows,
       pagination: {
-        total,
-        limit: filters.limit,
-        offset: filters.offset,
-        hasMore: (filters.offset + doctors.length) < total
+        limit: Number(limit),
+        offset: Number(offset),
+        count: result.rows.length
       }
     });
   } catch (error) {
-    console.error('Error in getAllDoctors:', error);
+    console.error('❌ Error fetching doctors:', error.message);
     res.status(500).json({
       success: false,
       message: 'Server error while fetching doctors'
@@ -41,59 +63,32 @@ exports.getAllDoctors = async (req, res) => {
   }
 };
 
-exports.searchDoctors = async (req, res) => {
-  try {
-    const { q } = req.query;
-    
-    if (!q || q.trim().length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: 'Search term must be at least 2 characters'
-      });
-    }
-    
-    const doctors = await Doctor.search(q.trim());
-    
-    res.json({
-      success: true,
-      data: doctors,
-      count: doctors.length
-    });
-  } catch (error) {
-    console.error('Error in searchDoctors:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while searching doctors'
-    });
-  }
-};
-
+/**
+ * GET /api/doctors/:id
+ * Fetch doctor by ID
+ */
 exports.getDoctorById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Doctor ID is required'
-      });
-    }
-    
-    const doctor = await Doctor.findById(id);
-    
-    if (!doctor) {
+
+    const result = await pool.query(
+      `SELECT * FROM doctors WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Doctor not found'
       });
     }
-    
+
     res.json({
       success: true,
-      data: doctor
+      data: result.rows[0]
     });
   } catch (error) {
-    console.error('Error in getDoctorById:', error);
+    console.error('❌ Error fetching doctor:', error.message);
     res.status(500).json({
       success: false,
       message: 'Server error while fetching doctor details'
@@ -101,16 +96,24 @@ exports.getDoctorById = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/doctors/specialties
+ * Fetch distinct specialties
+ */
 exports.getSpecialties = async (req, res) => {
   try {
-    const specialties = await Doctor.getSpecialties();
-    
+    const result = await pool.query(`
+      SELECT DISTINCT specialty 
+      FROM doctors
+      ORDER BY specialty
+    `);
+
     res.json({
       success: true,
-      data: specialties
+      data: result.rows.map(r => r.specialty)
     });
   } catch (error) {
-    console.error('Error in getSpecialties:', error);
+    console.error('❌ Error fetching specialties:', error.message);
     res.status(500).json({
       success: false,
       message: 'Server error while fetching specialties'
@@ -118,17 +121,30 @@ exports.getSpecialties = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/doctors/top-rated
+ * Fetch top rated doctors
+ */
 exports.getTopRatedDoctors = async (req, res) => {
   try {
-    const limit = req.query.limit || 10;
-    const doctors = await Doctor.getTopRated(parseInt(limit));
-    
+    const limit = Number(req.query.limit || 10);
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM doctors
+      ORDER BY rating DESC
+      LIMIT $1
+      `,
+      [limit]
+    );
+
     res.json({
       success: true,
-      data: doctors
+      data: result.rows
     });
   } catch (error) {
-    console.error('Error in getTopRatedDoctors:', error);
+    console.error('❌ Error fetching top rated doctors:', error.message);
     res.status(500).json({
       success: false,
       message: 'Server error while fetching top rated doctors'
@@ -136,26 +152,31 @@ exports.getTopRatedDoctors = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/doctors/specialty/:specialty
+ * Fetch doctors by specialty
+ */
 exports.getDoctorsBySpecialty = async (req, res) => {
   try {
     const { specialty } = req.params;
-    
-    if (!specialty) {
-      return res.status(400).json({
-        success: false,
-        message: 'Specialty is required'
-      });
-    }
-    
-    const doctors = await Doctor.findBySpecialty(specialty);
-    
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM doctors
+      WHERE specialty = $1
+      ORDER BY rating DESC
+      `,
+      [specialty]
+    );
+
     res.json({
       success: true,
-      data: doctors,
-      count: doctors.length
+      data: result.rows,
+      count: result.rows.length
     });
   } catch (error) {
-    console.error('Error in getDoctorsBySpecialty:', error);
+    console.error('❌ Error fetching doctors by specialty:', error.message);
     res.status(500).json({
       success: false,
       message: 'Server error while fetching doctors by specialty'
