@@ -12,7 +12,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Button } from '../../ui/Button';
-import { AnalysisResult, Finding, Recommendation } from '../../../types/medical-images';
+import { AnalysisResult } from '../../../types/medical.types';
 
 interface AnalysisResultsProps {
   result: AnalysisResult;

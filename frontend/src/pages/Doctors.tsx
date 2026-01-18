@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { Toggle } from '../components/ui/Toggle';
+import AppointmentBookingModal from '../components/features/appointment/AppointmentBookingModal';
 import DoctorsAPI from '../services/doctors-api';
 import {
   Search,
@@ -18,13 +19,9 @@ import {
   Calendar,
   Award,
   Shield,
-  Globe,
   Heart,
   Users,
-  TrendingUp,
-  ChevronDown,
   CheckCircle,
-  ExternalLink
 } from 'lucide-react';
 
 // Define Doctor and Review interfaces inline since types file might not exist
@@ -88,6 +85,8 @@ export const Doctors: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   const [specialties, setSpecialties] = useState<string[]>([
     'All Specialties',
@@ -207,29 +206,17 @@ export const Doctors: React.FC = () => {
     return a.consultationFee - b.consultationFee;
   });
 
-  const handleBookAppointment = async (doctorId: string) => {
-    try {
-      const doctor = doctors.find(d => d.id === doctorId);
-      if (!doctor) return;
-
-      // Show booking confirmation with real doctor details
-      const confirmed = window.confirm(
-        `Book appointment with ${doctor.name}?\n\n` +
-        `Specialty: ${doctor.specialization}\n` +
-        `Fee: ₹${doctor.consultationFee}\n` +
-        `Available: ${doctor.schedule.days.join(', ')}\n\n` +
-        `Click OK to confirm booking.`
-      );
-
-      if (confirmed) {
-        // In production, this would make an API call
-        alert(`Appointment booking initiated with ${doctor.name}!\n\n` +
-          `Our team will contact you at your registered phone number to confirm.`);
-      }
-    } catch (error) {
-      console.error('Error booking appointment:', error);
-      alert('Unable to book appointment. Please try again.');
+  const handleBookAppointment = (doctorId: string) => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (doctor) {
+      setSelectedDoctor(doctor);
+      setShowBookingModal(true);
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowBookingModal(false);
+    setSelectedDoctor(null);
   };
 
   return (
@@ -585,8 +572,8 @@ export const Doctors: React.FC = () => {
               </Card>
               <Card className="text-center p-6">
                 <div className="text-3xl font-bold text-primary-600 mb-2">
-                  {doctors.length > 0 
-                    ? Math.round(doctors.reduce((sum, doc) => sum + doc.rating, 0) / doctors.length * 20) 
+                  {doctors.length > 0
+                    ? Math.round(doctors.reduce((sum, doc) => sum + doc.rating, 0) / doctors.length * 20)
                     : 98}%
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -613,6 +600,15 @@ export const Doctors: React.FC = () => {
           </>
         )}
       </Container>
+
+      {/* Appointment Booking Modal */}
+      {showBookingModal && selectedDoctor && (
+        <AppointmentBookingModal
+          isOpen={showBookingModal}
+          onClose={handleCloseModal}
+          doctor={selectedDoctor}
+        />
+      )}
     </div>
   );
 };

@@ -11,6 +11,8 @@ import { VoiceAnalyzer } from '../components/features/home/VoiceAnalyzer';
 import { WeatherNotifications } from '../components/features/home/WeatherNotifications';
 import AppointmentBookingModal from '../components/features/appointment/AppointmentBookingModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Users,
   Activity,
@@ -57,7 +59,7 @@ export const Home: React.FC = () => {
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<MedicalInsight | null>(null);
   const [showArticleModal, setShowArticleModal] = useState(false);
-  
+  const navigate = useNavigate();
 
 
 
@@ -421,7 +423,7 @@ export const Home: React.FC = () => {
                 </p>
                 <Button
                   leftIcon={<Plus className="w-4 h-4" />}
-                  onClick={() => setShowAppointmentModal(true)}
+                  onClick={() => navigate('/doctors')}
                 >
                   Book Appointment
                 </Button>
@@ -693,38 +695,38 @@ export const Home: React.FC = () => {
                   hoverable
                   className="p-6 border-0 hover-lift"
                 >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                      {stat.label}
-                    </p>
-                    <p className="text-4xl font-bold text-neutral-900 dark:text-white mb-2">
-                      {stat.value}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${parseInt(stat.change) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {stat.change}
-                      </span>
-                      <span className="text-sm text-neutral-500 clinical-subtle">
-                        {stat.description}
-                      </span>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                        {stat.label}
+                      </p>
+                      <p className="text-4xl font-bold text-neutral-900 dark:text-white mb-2">
+                        {stat.value}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${parseInt(stat.change) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {stat.change}
+                        </span>
+                        <span className="text-sm text-neutral-500 clinical-subtle">
+                          {stat.description}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl">
+                      {stat.icon}
                     </div>
                   </div>
-                  <div className="p-3 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl">
-                    {stat.icon}
-                  </div>
-                </div>
 
-                {/* Progress bar */}
-                <div className="mt-6">
-                  <div className="h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${parseInt(stat.change) >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ width: '85%' }}
-                    ></div>
+                  {/* Progress bar */}
+                  <div className="mt-6">
+                    <div className="h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${parseInt(stat.change) >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                        style={{ width: '85%' }}
+                      ></div>
+                    </div>
                   </div>
-                </div>
-              </GlassCard>
+                </GlassCard>
               </div>
             ))}
           </div>
@@ -1342,8 +1344,7 @@ export const Home: React.FC = () => {
       {/* Appointment Booking Modal */}
       <AppointmentBookingModal
         isOpen={showAppointmentModal}
-        onClose={() => setShowAppointmentModal(false)}
-      />
+        onClose={() => setShowAppointmentModal(false)} doctor={undefined}      />
     </div>
   );
 };
