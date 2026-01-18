@@ -8,17 +8,24 @@
     "dev": "nodemon server.js",
     "start:ts": "ts-node-dev --respawn --transpile-only src/index.ts",
     "start:prod": "NODE_ENV=production node server.js",
+
     "migration:generate": "npm run typeorm migration:generate -- -d src/config/data-source.ts",
     "migration:run": "npm run typeorm migration:run -- -d src/config/data-source.ts",
     "migration:revert": "npm run typeorm migration:revert -- -d src/config/data-source.ts",
+
     "typeorm": "ts-node-dev ./node_modules/typeorm/cli",
+
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
+
     "security:scan": "npm audit",
+
     "docker:build": "docker build -t healthcare-api .",
     "docker:run": "docker-compose up -d",
+
     "db:setup": "npx ts-node scripts/setup-database.ts",
     "db:check": "node scripts/check-db.js",
     "db:migrate": "npm run typeorm migration:run -- -d src/config/data-source.ts",
@@ -30,7 +37,6 @@
     "healthcare",
     "ai",
     "nodejs",
-    "mysql",
     "medical",
     "hipaa"
   ],
