@@ -1,24 +1,16 @@
 {
-  "name": "healthcare-backend",
+  "name": "medintelect-backend",
   "version": "1.0.0",
-  "description": "Healthcare AI Platform Backend",
+  "private": true,
+  "description": "Medintelect Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "start:ts": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start:prod": "NODE_ENV=production node server.js",
-    "test": "jest --coverage",
-    "lint": "eslint src --ext .ts"
+    "dev": "nodemon server.js"
   },
-  "keywords": [
-    "healthcare",
-    "ai",
-    "nodejs",
-    "medical"
-  ],
-  "author": "HealthCare+ Team",
-  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
@@ -33,13 +25,5 @@
     "pg": "^8.16.3",
     "redis": "^4.6.7",
     "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.17",
-    "@types/node": "^20.3.1",
-    "nodemon": "^3.1.11"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
